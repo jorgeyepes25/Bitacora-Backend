@@ -1,9 +1,12 @@
 import { Router } from "express";
+import { protect } from '../middlewares/authMiddleware.js';
+import authRoutes from './authRoutes.js';
 import routerUser from "./userRoute.js";
 import routerRole from "./roleRoute.js";
 
 const router = Router();
-router.use("/user", routerUser);
-router.use("/role", routerRole);
+router.use('/api/auth', authRoutes);
+router.use("/user", protect, routerUser);
+router.use("/role", protect, routerRole);
 
 export default router;
