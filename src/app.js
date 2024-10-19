@@ -1,9 +1,10 @@
 import express from 'express';
 import morgan from 'morgan';  
 import cors from 'cors'; 
-// import { serverConfig } from './config/index.js'; 
-const port = process.env.PORT || 3000;
+import routes from './routes/index.js';
+import { connectDB } from './database/conexion.js';
 
+const port = process.env.PORT || 3000;
 const app = express();
 
 // Middlewares
@@ -16,9 +17,9 @@ app.get('/', (req, res) => {
   res.send('Hello World!');
 });
 
-// const port = serverConfig.port;
+app.use('/api', routes);
 
-// Servidor escuchando
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
+  connectDB();
 });

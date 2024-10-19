@@ -1,19 +1,13 @@
 import mongoose from 'mongoose';
-import { databaseConfig } from './config.js';
+import { databaseConfig } from '../config/index.js';
 
-const connectDB = async () => {
+// Función para conectar a MongoDB
+export const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(`mongodb://${databaseConfig.host}/${databaseConfig.name}`, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      user: databaseConfig.user,
-      pass: databaseConfig.pass
-    });
-    console.log(`MongoDB connected: ${conn.connection.host}`);
+    await mongoose.connect(databaseConfig.mongourl);
+    console.log('MongoDB connected');
   } catch (error) {
-    console.error(`Error connecting to MongoDB: ${error.message}`);
-    process.exit(1);
+    console.error('Error connecting to MongoDB:', error);
+    throw error;
   }
 };
-
-export default connectDB;
