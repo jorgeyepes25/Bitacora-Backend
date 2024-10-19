@@ -4,7 +4,7 @@ import { body } from 'express-validator';
 
 const router = Router();
 
-// Ruta de inicio de sesión
+// Ruta para iniciar sesión (POST)
 router.post(
   '/login',
   [
