@@ -1,7 +1,8 @@
 import express from 'express';
 import morgan from 'morgan';  
 import cors from 'cors'; 
-import { serverConfig } from './config/index.js'; 
+// import { serverConfig } from './config/index.js'; 
+const port = process.env.PORT || 3000;
 
 const app = express();
 
@@ -15,7 +16,7 @@ app.get('/', (req, res) => {
   res.send('Hello World!');
 });
 
-const port = serverConfig.port;
+// const port = serverConfig.port;
 
 // Servidor escuchando
 app.listen(port, () => {
