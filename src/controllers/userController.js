@@ -1,10 +1,10 @@
 import bcrypt from "bcrypt";
-import { body, validationResult } from "express-validator";
+import { validationResult } from "express-validator";
 import User from "../models/Usermodel.js";
 import Role from "../models/Rolemodel.js";
-import { findRoleByName, formatUserResponse } from "../utils/helperFunctions.js";
+import { findRoleByName, formatUserResponse, updatePassword } from "../utils/helperFunctions.js";
 
-// Crear un nuevo usuario
+// Crear un nuevo usuario con múltiples roles
 export const createUser = [
   async (req, res) => {
     const errors = validationResult(req);
@@ -13,18 +13,17 @@ export const createUser = [
     }
 
     try {
-      const { username, password, roleName } = req.body;
+      const { username, password, roleNames } = req.body;
 
       const existingUser = await User.findOne({ username });
       if (existingUser) {
-        return res
-          .status(400)
-          .json({ message: "El nombre de usuario ya existe" });
+        return res.status(400).json({ message: "El nombre de usuario ya existe" });
       }
 
-      const role = roleName
-        ? await findRoleByName(roleName)
-        : await findRoleByName("colaborador");
+      // Buscar los roles por sus nombres
+      const roles = roleNames && roleNames.length > 0 
+        ? await Role.find({ name: { $in: roleNames } }) 
+        : [await findRoleByName("colaborador")];
 
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(password, salt);
@@ -32,7 +31,7 @@ export const createUser = [
       const newUser = new User({
         username,
         password: hashedPassword,
-        role,
+        roles: roles.map(role => role._id),  // Asignar múltiples roles
       });
       const savedUser = await newUser.save();
 
@@ -43,11 +42,10 @@ export const createUser = [
   },
 ];
 
-
 // Obtener todos los usuarios con el rol
 export const getUsers = async (req, res) => {
   try {
-    const users = await User.find().populate("role", "name");
+    const users = await User.find().populate("roles", "name");
 
     // Mapear los usuarios para devolver solo el nombre del rol
     const usersWithRoleName = users.map((user) => formatUserResponse(user));
@@ -58,20 +56,7 @@ export const getUsers = async (req, res) => {
   }
 };
 
-// Obtener un usuario por ID
-export const getUserById = async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id).populate("role", "name");
-    if (!user)
-      return res.status(404).json({ message: "Usuario no encontrado" });
-
-    res.status(200).json(formatUserResponse(user));
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// Actualizar un usuario por ID
+// Actualizar un usuario con múltiples roles
 export const updateUser = [
   async (req, res) => {
     const errors = validationResult(req);
@@ -80,7 +65,7 @@ export const updateUser = [
     }
 
     try {
-      const { username, password, roleName, status } = req.body;
+      const { username, password, roleNames, status } = req.body;
       const user = await User.findById(req.params.id);
 
       if (!user) {
@@ -99,15 +84,15 @@ export const updateUser = [
         updatedFields.status = status;
       }
 
-      // Comparar solo si el roleName es diferente
-      if (roleName) {
-        const role = await findRoleByName(roleName);
-        if (String(role) !== String(user.role)) {
-          updatedFields.role = role;
+      // Comparar roles si es necesario
+      if (roleNames) {
+        const roles = await Role.find({ name: { $in: roleNames } });
+        if (roles.length !== user.roles.length || !roles.every(role => user.roles.includes(role._id))) {
+          updatedFields.roles = roles.map(role => role._id);
         }
       }
 
-      // Si se proporciona una contraseña, usar la función de actualización de contraseña
+      // Actualizar contraseña si es necesario
       if (password) {
         try {
           updatedFields.password = await updatePassword(password, user.password);
@@ -116,7 +101,6 @@ export const updateUser = [
         }
       }
 
-      // Solo realizar la actualización si hay campos que actualizar
       if (Object.keys(updatedFields).length === 0) {
         return res.status(400).json({ message: "No hay cambios para actualizar" });
       }

@@ -14,11 +14,11 @@ const userSchema = new mongoose.Schema({
     required: [true, 'La contraseña es obligatoria'],
     minlength: [6, 'La contraseña debe tener al menos 6 caracteres']
   },
-  role: {
+  roles: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Role',
     required: [true, 'El rol es obligatorio']
-  },
+  }],
   status: {
     type: String,
     enum: ['activo', 'inactivo'],
