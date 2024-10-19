@@ -5,6 +5,7 @@ import routerUser from "./userRoute.js";
 import routerRole from "./roleRoute.js";
 
 const router = Router();
+
 router.use('/auth', authRoutes);
 router.use("/user", protect, routerUser);
 router.use("/role", protect, routerRole);
