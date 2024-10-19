@@ -10,6 +10,5 @@ export const databaseConfig = {
 };
 
 export const serverConfig = {
-  port: process.env.PORT || 3000,
-  host: process.env.HOST_SERVER || 'localhost',
+  port: process.env.PORT || 3000
 };

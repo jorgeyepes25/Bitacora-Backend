@@ -15,10 +15,9 @@ app.get('/', (req, res) => {
   res.send('Hello World!');
 });
 
-const host = serverConfig.host;
 const port = serverConfig.port;
 
 // Servidor escuchando
-app.listen(port, host, () => {
-  console.log(`Server is running on http://${host}:${port}`);
+app.listen(port, () => {
+  console.log(`Server is running on http://localhost:${port}`);
 });
