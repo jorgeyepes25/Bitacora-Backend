@@ -1,35 +1,37 @@
-import admin from 'firebase-admin';
-import { initializeApp } from 'firebase-admin/app';
-import { getStorage } from 'firebase-admin/storage';
-import { v4 as uuidv4 } from 'uuid';
+import { initializeApp } from "firebase-admin/app";
+import { getStorage } from "firebase-admin/storage";
+import crypto from "crypto";
+import { firebaseConfig } from "../config/index.js";
 
-// Cargar las credenciales de Firebase (key)
-const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+let uuidv4 = crypto.randomUUID();
 
-initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  storageBucket: process.env.FIREBASE_STORAGE_BUCKET
-});
+const app = initializeApp(firebaseConfig);
 
-const bucket = getStorage().bucket();
+export const storage = getStorage(app).bucket(); // Inicializamos el bucket de almacenamiento
 
 // Función para subir imagen a Firebase Storage
-export const uploadImageToFirebase = async (file) => {
-  const filename = `${uuidv4()}.${file.mimetype.split('/')[1]}`;
-  const fileUpload = bucket.file(filename);
+export async function uploadImageToFirebase(file) {
+  const filename = `${uuidv4}.${file.mimetype.split('/')[1]}`; // Nombre único para la imagen
+  const fileUpload = storage.file(filename); // Creamos una referencia al archivo
+
   const stream = fileUpload.createWriteStream({
     metadata: {
-      contentType: file.mimetype,
-    }
+      contentType: file.mimetype, // Tipo de archivo
+    },
   });
 
   return new Promise((resolve, reject) => {
-    stream.on('error', (error) => reject(error));
-    stream.on('finish', async () => {
-      await fileUpload.makePublic();
-      const url = `https://storage.googleapis.com/${bucket.name}/${filename}`;
-      resolve(url);
+    stream.on('error', (error) => {
+      reject(error); // Manejo de error en la subida
     });
-    stream.end(file.buffer);
+
+    stream.on('finish', async () => {
+      // Hacemos el archivo público después de subirlo
+      await fileUpload.makePublic();
+      const publicUrl = `https://storage.googleapis.com/${storage.name}/${filename}`; // Obtenemos la URL pública
+      resolve(publicUrl); // Resolución con la URL pública
+    });
+
+    stream.end(file.buffer); // Terminamos la subida
   });
-};
+}
