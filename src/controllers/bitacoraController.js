@@ -11,7 +11,7 @@ export const crearBitacora = async (req, res) => {
     // Si hay fotos en la solicitud, subirlas a Firebase y obtener las URLs
     if (req.files && req.files.length > 0) {
       const imageUploadPromises = req.files.map(file => uploadImageToFirebase(file));
-      fotos = await Promise.all(imageUploadPromises); // Sube todas las fotos
+      fotos = await Promise.all(imageUploadPromises);
     }
 
     // Crear nueva bitácora
