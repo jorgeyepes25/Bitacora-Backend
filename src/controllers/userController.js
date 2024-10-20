@@ -2,7 +2,11 @@ import bcrypt from "bcrypt";
 import { validationResult } from "express-validator";
 import User from "../models/Usermodel.js";
 import Role from "../models/Rolemodel.js";
-import { findRoleByName, formatUserResponse, updatePassword } from "../utils/helperFunctions.js";
+import {
+  findRoleByName,
+  formatUserResponse,
+  updatePassword,
+} from "../utils/helperFunctions.js";
 
 // Crear un nuevo usuario con múltiples roles
 export const createUser = [
@@ -17,13 +21,25 @@ export const createUser = [
 
       const existingUser = await User.findOne({ username });
       if (existingUser) {
-        return res.status(400).json({ message: "El nombre de usuario ya existe" });
+        return res
+          .status(400)
+          .json({ message: "El nombre de usuario ya existe" });
       }
 
       // Buscar los roles por sus nombres
-      const roles = roleNames && roleNames.length > 0 
-        ? await Role.find({ name: { $in: roleNames } }) 
-        : [await findRoleByName("colaborador")];
+      const defaultRole = await findRoleByName("colaborador");
+      const roles =
+        roleNames && roleNames.length > 0
+          ? await Role.find({ name: { $in: roleNames } })
+          : defaultRole
+          ? [defaultRole]
+          : [];
+
+      if (roles.length === 0) {
+        return res
+          .status(400)
+          .json({ message: "No se pudo encontrar ningún rol válido" });
+      }
 
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(password, salt);
@@ -31,7 +47,7 @@ export const createUser = [
       const newUser = new User({
         username,
         password: hashedPassword,
-        roles: roles.map(role => role._id),  // Asignar múltiples roles
+        roles: roles.map((role) => role._id), // Asignar múltiples roles
       });
       const savedUser = await newUser.save();
 
@@ -70,7 +86,6 @@ export const getUserById = async (req, res) => {
   }
 };
 
-
 // Actualizar un usuario con múltiples roles
 export const updateUser = [
   async (req, res) => {
@@ -102,25 +117,37 @@ export const updateUser = [
       // Comparar roles si es necesario
       if (roleNames) {
         const roles = await Role.find({ name: { $in: roleNames } });
-        if (roles.length !== user.roles.length || !roles.every(role => user.roles.includes(role._id))) {
-          updatedFields.roles = roles.map(role => role._id);
+        if (
+          roles.length !== user.roles.length ||
+          !roles.every((role) => user.roles.includes(role._id))
+        ) {
+          updatedFields.roles = roles.map((role) => role._id);
         }
       }
 
       // Actualizar contraseña si es necesario
       if (password) {
         try {
-          updatedFields.password = await updatePassword(password, user.password);
+          updatedFields.password = await updatePassword(
+            password,
+            user.password
+          );
         } catch (error) {
           return res.status(400).json({ message: error.message });
         }
       }
 
       if (Object.keys(updatedFields).length === 0) {
-        return res.status(400).json({ message: "No hay cambios para actualizar" });
+        return res
+          .status(400)
+          .json({ message: "No hay cambios para actualizar" });
       }
 
-      const updatedUser = await User.findByIdAndUpdate(req.params.id, updatedFields, { new: true }).select('-password');
+      const updatedUser = await User.findByIdAndUpdate(
+        req.params.id,
+        updatedFields,
+        { new: true }
+      ).select("-password");
 
       res.status(200).json(formatUserResponse(updatedUser));
     } catch (error) {

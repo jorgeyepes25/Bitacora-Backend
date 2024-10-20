@@ -19,9 +19,15 @@ export const formatUserResponse = (user) => {
 
 // Buscar un rol por nombre
 export const findRoleByName = async (roleName) => {
-  const role = await Role.findOne({ name: roleName });
-  if (!role) {
-    throw new Error(`Rol '${roleName}' no encontrado`);
+  try {
+    const role = await Role.findOne({ name: roleName });
+    if (!role) {
+      console.warn(`Rol '${roleName}' no encontrado`);
+      return null;
+    }
+    return role;
+  } catch (error) {
+    console.error(`Error buscando rol '${roleName}': ${error.message}`);
+    throw error;
   }
-  return role;
-};
+}
