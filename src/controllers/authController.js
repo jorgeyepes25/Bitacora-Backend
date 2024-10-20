@@ -1,12 +1,15 @@
+//authController.js
 import jwt from 'jsonwebtoken';
 import passport from 'passport';
+import { authConfig } from '../config/index.js';
 
 // Función para generar el token JWT
-const generateToken = (user) => {
-  return jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN,
+export const generateToken = (user) => {
+  return jwt.sign({ userId: user._id, role: user.role }, authConfig.jwtSecret, {
+    expiresIn: authConfig.jwtExpiresIn,
   });
 };
+
 
 // Controlador para iniciar sesión con usuario y contraseña
 export const loginUser = (req, res, next) => {
@@ -26,6 +29,10 @@ export const loginUser = (req, res, next) => {
 
 // Controlador para cerrar sesión
 export const logout = (req, res) => {
-  req.logout();
-  res.status(200).json({ message: 'Sesión cerrada con éxito' });
+  const token = req.header('Authorization')?.split(' ')[1];
+  if (!token) {
+    return res.status(400).json({ message: 'No se proporcionó token' });
+  }
+
+  res.status(200).json({ message: 'Sesión cerrada con éxito. El token debe eliminarse en el frontend.' });
 };
