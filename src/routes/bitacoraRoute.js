@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router } from 'express';
 import {
   crearBitacora,
   obtenerBitacoras,
@@ -8,24 +8,23 @@ import {
   agregarNotaAdicional,
   obtenerNotasAdicionales,
   agregarComentario,
-  obtenerComentarios,
-} from "../controllers/bitacoraController.js";
+  obtenerComentarios
+} from '../controllers/bitacoraController.js'; 
+import upload from '../middlewares/multerMiddleware.js';
 
-const routerBitacora = Router();
+const router = Router();
 
 // Rutas para el CRUD de bitácoras
-router.post("/", crearBitacora); // Crear una nueva bitácora
-router.get("/", obtenerBitacoras); // Obtener todas las bitácoras
-router.get("/:id", obtenerBitacoraPorId); // Obtener una bitácora por ID
-router.put("/:id", actualizarBitacora); // Actualizar una bitácora por ID
-router.delete("/:id", eliminarBitacora); // Eliminar una bitácora por ID
+router.post('/', upload.array('fotos'), crearBitacora);
+router.get('/', obtenerBitacoras);
+router.get('/:id', obtenerBitacoraPorId);
+router.put('/:id', upload.array('fotos'), actualizarBitacora);
+router.delete('/:id', eliminarBitacora);
 
-// Rutas para notas adicionales en bitácoras
-router.post("/:id/notas", agregarNotaAdicional); // Agregar una nota adicional a una bitácora
-router.get("/:id/notas", obtenerNotasAdicionales); // Obtener notas adicionales de una bitácora
+// Rutas para notas adicionales y comentarios
+router.post('/:id/notas', agregarNotaAdicional);
+router.get('/:id/notas', obtenerNotasAdicionales);
+router.post('/:id/comentarios', agregarComentario);
+router.get('/:id/comentarios', obtenerComentarios);
 
-// Rutas para comentarios en bitácoras
-router.post("/:id/comentarios", agregarComentario); // Agregar un comentario a una bitácora
-router.get("/:id/comentarios", obtenerComentarios); // Obtener comentarios de una bitácora
-
-export default routerBitacora;
+export default router;

@@ -1,28 +1,38 @@
 import Bitacora from '../models/Bitacora.js';
+import { uploadImageToFirebase } from '../config/firebaseConfig.js';
 
 // Crear una nueva bitácora
 export const crearBitacora = async (req, res) => {
-  try {
-    const { titulo, fechaMuestreo, localizacion, condicionesClimaticas, descripcionHabitat, fotos, detallesEspecies, observaciones } = req.body;
-
-    const nuevaBitacora = new Bitacora({
-      titulo,
-      fechaMuestreo,
-      localizacion,
-      condicionesClimaticas,
-      descripcionHabitat,
-      fotos,
-      detallesEspecies,
-      observaciones,
-      creadoPor: req.user._id
-    });
-
-    const bitacoraGuardada = await nuevaBitacora.save();
-    res.status(201).json(bitacoraGuardada);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
+    try {
+      const { titulo, fechaMuestreo, localizacion, condicionesClimaticas, descripcionHabitat, detallesEspecies, observaciones } = req.body;
+  
+      let fotos = [];
+  
+      // Si hay fotos en la solicitud, subirlas a Firebase y obtener las URLs
+      if (req.files && req.files.length > 0) {
+        const imageUploadPromises = req.files.map(file => uploadImageToFirebase(file));
+        fotos = await Promise.all(imageUploadPromises);
+      }
+  
+      // Crear nueva bitácora
+      const nuevaBitacora = new Bitacora({
+        titulo,
+        fechaMuestreo,
+        localizacion,
+        condicionesClimaticas,
+        descripcionHabitat,
+        fotos,
+        detallesEspecies,
+        observaciones,
+        creadoPor: req.user.id
+      });
+  
+      const bitacoraGuardada = await nuevaBitacora.save();
+      res.status(201).json(bitacoraGuardada);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  };
 
 // Obtener todas las bitácoras
 export const obtenerBitacoras = async (req, res) => {
