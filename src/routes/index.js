@@ -8,7 +8,7 @@ import routerBitacora from "./bitacoraRoute.js";
 const router = Router();
 
 router.use('/auth', authRoutes);
-router.use("/user", protect, routerUser);
+router.use("/user", routerUser);
 router.use("/role", protect, routerRole);
 router.use("/bitacora", protect, routerBitacora);
 

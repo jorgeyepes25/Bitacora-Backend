@@ -32,17 +32,16 @@ passport.use(new GoogleStrategy({
   callbackURL: '/api/auth/google/callback',
 }, async (accessToken, refreshToken, profile, done) => {
   try {
-    const user = await User.findOne({ googleId: profile.id });
-    if (user) {
-      return done(null, user);
-    } else {
-      const newUser = new User({
+    let user = await User.findOne({ googleId: profile.id });
+    if (!user) {
+      user = new User({
         username: profile.displayName,
         googleId: profile.id,
+        email: profile.emails ? profile.emails[0].value : undefined,
       });
-      const savedUser = await newUser.save();
-      return done(null, savedUser);
+      await user.save();
     }
+    return done(null, user);
   } catch (error) {
     return done(error);
   }
@@ -53,19 +52,19 @@ passport.use(new FacebookStrategy({
   clientID: process.env.FACEBOOK_CLIENT_ID,
   clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
   callbackURL: '/api/auth/facebook/callback',
+  profileFields: ['id', 'displayName', 'email'],
 }, async (accessToken, refreshToken, profile, done) => {
   try {
-    const user = await User.findOne({ facebookId: profile.id });
-    if (user) {
-      return done(null, user);
-    } else {
-      const newUser = new User({
+    let user = await User.findOne({ facebookId: profile.id });
+    if (!user) {
+      user = new User({
         username: profile.displayName,
         facebookId: profile.id,
+        email: profile.emails ? profile.emails[0].value : undefined,
       });
-      const savedUser = await newUser.save();
-      return done(null, savedUser);
+      await user.save();
     }
+    return done(null, user);
   } catch (error) {
     return done(error);
   }
@@ -78,17 +77,16 @@ passport.use(new GitHubStrategy({
   callbackURL: '/api/auth/github/callback',
 }, async (accessToken, refreshToken, profile, done) => {
   try {
-    const user = await User.findOne({ githubId: profile.id });
-    if (user) {
-      return done(null, user);
-    } else {
-      const newUser = new User({
+    let user = await User.findOne({ githubId: profile.id });
+    if (!user) {
+      user = new User({
         username: profile.username,
         githubId: profile.id,
+        email: profile.emails ? profile.emails[0].value : undefined,
       });
-      const savedUser = await newUser.save();
-      return done(null, savedUser);
+      await user.save();
     }
+    return done(null, user);
   } catch (error) {
     return done(error);
   }

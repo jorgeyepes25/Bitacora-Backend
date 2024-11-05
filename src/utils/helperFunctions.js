@@ -1,4 +1,5 @@
 import bcrypt from "bcrypt";
+import Role from "../models/Rolemodel.js";
 
 // Función para actualizar la contraseña si es diferente de la actual
 export const updatePassword = async (newPassword, currentPassword) => {
@@ -30,4 +31,4 @@ export const findRoleByName = async (roleName) => {
     console.error(`Error buscando rol '${roleName}': ${error.message}`);
     throw error;
   }
-}
+};

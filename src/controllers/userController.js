@@ -47,7 +47,7 @@ export const createUser = [
       const newUser = new User({
         username,
         password: hashedPassword,
-        roles: roles.map((role) => role._id), // Asignar múltiples roles
+        roles: roles.map((role) => role._id),
       });
       const savedUser = await newUser.save();
 

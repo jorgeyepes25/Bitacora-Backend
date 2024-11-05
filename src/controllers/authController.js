@@ -10,7 +10,6 @@ export const generateToken = (user) => {
   });
 };
 
-
 // Controlador para iniciar sesión con usuario y contraseña
 export const loginUser = (req, res, next) => {
   passport.authenticate('local', (err, user, info) => {
@@ -22,7 +21,7 @@ export const loginUser = (req, res, next) => {
         return res.status(500).json({ message: 'Error al iniciar sesión' });
       }
       const token = generateToken(user);
-      return res.status(200).json({ message: 'Autenticación exitosa', token });
+      return res.status(200).json({ message: 'Autenticación exitosa', token, userId: user.id });
     });
   })(req, res, next);
 };
@@ -35,4 +34,15 @@ export const logout = (req, res) => {
   }
 
   res.status(200).json({ message: 'Sesión cerrada con éxito. El token debe eliminarse en el frontend.' });
+};
+
+// Callback para Google OAuth
+export const googleCallback = (req, res, next) => {
+  passport.authenticate('google', (err, user) => {
+    if (err || !user) {
+      return res.status(400).json({ message: 'Autenticación fallida con Google' });
+    }
+    const token = generateToken(user);
+    return res.status(200).json({ message: 'Autenticación exitosa con Google', token, userId: user.id });
+  })(req, res, next);
 };
