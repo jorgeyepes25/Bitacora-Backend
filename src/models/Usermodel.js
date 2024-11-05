@@ -38,5 +38,6 @@ const userSchema = new mongoose.Schema({
   timestamps: true,
 });
 
-const User = mongoose.model('User', userSchema);
+// Verifica si el modelo ya existe antes de definirlo
+const User = mongoose.models.User || mongoose.model('User', userSchema);
 export default User;

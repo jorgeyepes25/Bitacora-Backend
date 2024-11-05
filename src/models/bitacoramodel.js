@@ -12,12 +12,16 @@ const bitacoraSchema = new mongoose.Schema({
   localizacion: {
     latitud: {
       type: Number,
-      required: [true, 'La latitud es obligatoria']
+      required: [true, 'La latitud es obligatoria'],
+      min: -90,
+      max: 90
     },
     longitud: {
       type: Number,
-      required: [true, 'La longitud es obligatoria']
-    },
+      required: [true, 'La longitud es obligatoria'],
+      min: -180,
+      max: 180
+    },    
   },
   condicionesClimaticas: String,
   descripcionHabitat: String,
@@ -27,7 +31,10 @@ const bitacoraSchema = new mongoose.Schema({
     nombreComun: String,
     familia: String,
     cantidadMuestras: Number,
-    estadoPlanta: String,
+    estadoPlanta: {
+      type: String,
+      enum: ['viva', 'seca', 'preservada']
+    },
     fotos: [String]
   }],
   observaciones: String,

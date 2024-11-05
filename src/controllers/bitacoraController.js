@@ -1,30 +1,61 @@
 import Bitacora from '../models/bitacoramodel.js';
+import User from '../models/usermodel.js';
 import { uploadImageToFirebase } from '../config/firebaseConfig.js';
 
 // Crear una nueva bitácora
 export const crearBitacora = async (req, res) => {
   try {
-    const { titulo, fechaMuestreo, localizacion, condicionesClimaticas, descripcionHabitat, detallesEspecies, observaciones } = req.body;
-
-    let fotos = [];
-
-    // Si hay fotos en la solicitud, subirlas a Firebase y obtener las URLs
-    if (req.files && req.files.length > 0) {
-      const imageUploadPromises = req.files.map(file => uploadImageToFirebase(file));
-      fotos = await Promise.all(imageUploadPromises);
-    }
-
-    // Crear nueva bitácora
-    const nuevaBitacora = new Bitacora({
+    const {
       titulo,
       fechaMuestreo,
       localizacion,
       condicionesClimaticas,
       descripcionHabitat,
-      fotos,
-      detallesEspecies,
       observaciones,
-      creadoPor: req.user.id
+      creadoPor,
+      detallesEspecies,
+      fotos
+    } = req.body;
+
+    // Transformar los datos de `detallesEspecies` si es necesario
+    const especiesTransformadas = detallesEspecies.map(especie => ({
+      nombreCientifico: especie.scientificName || '',
+      nombreComun: especie.commonName || '',
+      familia: especie.family || '',
+      cantidadMuestras: parseInt(especie.sampleQuantity, 10) || 0,
+      estadoPlanta: especie.state || 'viva',
+      fotos: especie.photos || []
+    }));
+
+    // Subir fotos a Firebase si existen archivos
+    let fotoUrls = [];
+    if (req.files && req.files.length > 0) {
+      const imageUploadPromises = req.files.map(file => uploadImageToFirebase(file));
+      fotoUrls = await Promise.all(imageUploadPromises);
+    } else {
+      fotoUrls = fotos || [];
+    }
+
+    // Verificar que el usuario existe
+    const user = await User.findById(creadoPor);
+    if (!user) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+
+    // Crear nueva bitácora con los datos procesados
+    const nuevaBitacora = new Bitacora({
+      titulo,
+      fechaMuestreo,
+      localizacion: {
+        latitud: parseFloat(localizacion.latitud),
+        longitud: parseFloat(localizacion.longitud),
+      },
+      condicionesClimaticas,
+      descripcionHabitat,
+      observaciones,
+      fotos: fotoUrls,
+      detallesEspecies: especiesTransformadas,
+      creadoPor: user._id
     });
 
     const bitacoraGuardada = await nuevaBitacora.save();
