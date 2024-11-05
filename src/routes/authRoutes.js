@@ -1,8 +1,16 @@
 // routes/authRoutes.js
 import { Router } from 'express';
 import passport from 'passport';
-import { loginUser, logout } from '../controllers/authController.js';
-import { generateToken } from '../controllers/authController.js'; // Reutilizar la función para generar tokens
+import { 
+    loginUser, 
+    logout, 
+    googleCallback, 
+    facebookCallback, 
+    githubCallback, 
+    googleSignupOrLogin, 
+    facebookSignupOrLogin, 
+    githubSignupOrLogin 
+} from '../controllers/authController.js';
 
 const router = Router();
 
@@ -16,42 +24,28 @@ router.get('/logout', logout);
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
 // Callback para Google OAuth
-router.get('/google/callback', (req, res, next) => {
-  passport.authenticate('google', (err, user) => {
-    if (err || !user) {
-      return res.status(400).json({ message: 'Autenticación fallida con Google' });
-    }
-    const token = generateToken(user);
-    return res.status(200).json({ message: 'Autenticación exitosa con Google', token, userId: user.id });
-  })(req, res, next);
-});
+router.get('/google/callback', googleCallback);
 
 // Ruta para iniciar sesión con Facebook
 router.get('/facebook', passport.authenticate('facebook', { scope: ['email'] }));
 
 // Callback para Facebook OAuth
-router.get('/facebook/callback', (req, res, next) => {
-  passport.authenticate('facebook', (err, user) => {
-    if (err || !user) {
-      return res.status(400).json({ message: 'Autenticación fallida con Facebook' });
-    }
-    const token = generateToken(user);
-    return res.status(200).json({ message: 'Autenticación exitosa con Facebook', token, userId: user.id });
-  })(req, res, next);
-});
+router.get('/facebook/callback', facebookCallback);
 
 // Ruta para iniciar sesión con GitHub
 router.get('/github', passport.authenticate('github', { scope: ['user:email'] }));
 
 // Callback para GitHub OAuth
-router.get('/github/callback', (req, res, next) => {
-  passport.authenticate('github', (err, user) => {
-    if (err || !user) {
-      return res.status(400).json({ message: 'Autenticación fallida con GitHub' });
-    }
-    const token = generateToken(user);
-    return res.status(200).json({ message: 'Autenticación exitosa con GitHub', token, userId: user.id });
-  })(req, res, next);
-});
+router.get('/github/callback', githubCallback);
+
+// Rutas para crear cuenta con redes sociales
+router.get('/social/google', googleSignupOrLogin);
+router.get('/social/google/callback', googleCallback);
+
+router.get('/social/facebook', facebookSignupOrLogin);
+router.get('/social/facebook/callback', facebookCallback);
+
+router.get('/social/github', githubSignupOrLogin);
+router.get('/social/github/callback', githubCallback);
 
 export default router;

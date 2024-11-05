@@ -5,6 +5,7 @@ import { Strategy as FacebookStrategy } from 'passport-facebook';
 import { Strategy as GitHubStrategy } from 'passport-github2';
 import bcrypt from 'bcrypt';
 import User from '../models/Usermodel.js';
+import { createUserWithSocialProfile } from '../controllers/userController.js';
 
 // Estrategia Local (usuario y contraseña)
 passport.use(new LocalStrategy(
@@ -34,12 +35,7 @@ passport.use(new GoogleStrategy({
   try {
     let user = await User.findOne({ googleId: profile.id });
     if (!user) {
-      user = new User({
-        username: profile.displayName,
-        googleId: profile.id,
-        email: profile.emails ? profile.emails[0].value : undefined,
-      });
-      await user.save();
+      user = await createUserWithSocialProfile(profile, 'google');
     }
     return done(null, user);
   } catch (error) {
@@ -57,12 +53,7 @@ passport.use(new FacebookStrategy({
   try {
     let user = await User.findOne({ facebookId: profile.id });
     if (!user) {
-      user = new User({
-        username: profile.displayName,
-        facebookId: profile.id,
-        email: profile.emails ? profile.emails[0].value : undefined,
-      });
-      await user.save();
+      user = await createUserWithSocialProfile(profile, 'facebook');
     }
     return done(null, user);
   } catch (error) {
@@ -79,12 +70,7 @@ passport.use(new GitHubStrategy({
   try {
     let user = await User.findOne({ githubId: profile.id });
     if (!user) {
-      user = new User({
-        username: profile.username,
-        githubId: profile.id,
-        email: profile.emails ? profile.emails[0].value : undefined,
-      });
-      await user.save();
+      user = await createUserWithSocialProfile(profile, 'github');
     }
     return done(null, user);
   } catch (error) {

@@ -58,6 +58,21 @@ export const createUser = [
   },
 ];
 
+// Crear un nuevo usuario a partir de una autenticación con red social
+export const createUserWithSocialProfile = async (profile, provider) => {
+  const defaultRole = await Role.findOne({ name: "colaborador" });
+  
+  const newUser = new User({
+    username: profile.displayName || profile.username,
+    email: profile.emails ? profile.emails[0].value : undefined,
+    roles: [defaultRole._id],
+    [`${provider}Id`]: profile.id,
+  });
+  
+  const savedUser = await newUser.save();
+  return savedUser;
+};
+
 // Obtener todos los usuarios con el rol
 export const getUsers = async (req, res) => {
   try {
