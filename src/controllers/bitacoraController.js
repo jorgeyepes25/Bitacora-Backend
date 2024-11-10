@@ -1,5 +1,5 @@
 import Bitacora from '../models/bitacoramodel.js';
-import User from '../models/usermodel.js';
+import User from '../models/Usermodel.js';
 import { uploadImageToFirebase } from '../config/firebaseConfig.js';
 
 // Crear una nueva bitácora
