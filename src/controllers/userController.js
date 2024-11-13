@@ -129,14 +129,17 @@ export const updateUser = [
         updatedFields.status = status;
       }
 
-      // Comparar roles si es necesario
+      // Comparar roles y actualizar si es necesario
       if (roleNames) {
         const roles = await Role.find({ name: { $in: roleNames } });
+        const roleIds = roles.map((role) => role._id);
+
+        // Actualizar los roles solo si son diferentes de los existentes
         if (
-          roles.length !== user.roles.length ||
-          !roles.every((role) => user.roles.includes(role._id))
+          roleIds.length !== user.roles.length ||
+          !roleIds.every((roleId) => user.roles.includes(roleId))
         ) {
-          updatedFields.roles = roles.map((role) => role._id);
+          updatedFields.roles = roleIds;
         }
       }
 
@@ -170,6 +173,42 @@ export const updateUser = [
     }
   },
 ];
+
+// Añadir roles a un usuario existente
+export const addRolesToUser = async (req, res) => {
+  try {
+    const { roleNames } = req.body;
+    const userId = req.params.id;
+
+    console.log(roleNames);
+
+    const user = await User.findById(userId).populate("roles", "name");
+
+    if (!user) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+
+    // Buscar los roles por sus nombres
+    const rolesToAdd = await Role.find({ name: { $in: roleNames } });
+    const newRoleIds = rolesToAdd.map((role) => role._id);
+
+    // Filtrar solo los roles que aún no están asignados al usuario
+    const currentRoleIds = user.roles.map((role) => role._id.toString());
+    const rolesToAddFiltered = newRoleIds.filter((roleId) => !currentRoleIds.includes(roleId.toString()));
+
+    if (rolesToAddFiltered.length === 0) {
+      return res.status(400).json({ message: "Todos los roles ya están asignados al usuario" });
+    }
+
+    // Agregar los nuevos roles al usuario
+    user.roles = [...user.roles, ...rolesToAddFiltered];
+    await user.save();
+
+    res.status(200).json(formatUserResponse(user));
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
 // Eliminar un usuario por ID
 export const deleteUser = async (req, res) => {
