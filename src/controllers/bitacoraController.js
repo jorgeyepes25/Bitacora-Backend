@@ -13,19 +13,21 @@ export const crearBitacora = async (req, res) => {
       descripcionHabitat,
       observaciones,
       creadoPor,
-      detallesEspecies,
+      detallesEspecies = [],
       fotos
     } = req.body;
 
-    // Transformar los datos de `detallesEspecies` si es necesario
-    const especiesTransformadas = detallesEspecies.map(especie => ({
-      nombreCientifico: especie.scientificName || '',
-      nombreComun: especie.commonName || '',
-      familia: especie.family || '',
-      cantidadMuestras: parseInt(especie.sampleQuantity, 10) || 0,
-      estadoPlanta: especie.state || 'viva',
-      fotos: especie.photos || []
-    }));
+    // Transformar los datos de `detallesEspecies` si existen
+    const especiesTransformadas = Array.isArray(detallesEspecies)
+      ? detallesEspecies.map(especie => ({
+          nombreCientifico: especie.scientificName || '',
+          nombreComun: especie.commonName || '',
+          familia: especie.family || '',
+          cantidadMuestras: parseInt(especie.sampleQuantity, 10) || 0,
+          estadoPlanta: especie.state || 'viva',
+          fotos: especie.photos || []
+        }))
+      : [];
 
     // Subir fotos a Firebase si existen archivos
     let fotoUrls = [];
@@ -54,7 +56,7 @@ export const crearBitacora = async (req, res) => {
       descripcionHabitat,
       observaciones,
       fotos: fotoUrls,
-      detallesEspecies: especiesTransformadas,
+      detallesEspecies: especiesTransformadas, // Puede ser vacío
       creadoPor: user._id
     });
 
@@ -64,6 +66,7 @@ export const crearBitacora = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 // Obtener todas las bitácoras
 export const obtenerBitacoras = async (req, res) => {
